@@ -1,0 +1,4 @@
+name: CustomQuestViewer
+version: 1.0
+main: me.ramonrpa.customquestviewer.Main
+depend: [BeautyQuests]
