@@ -62,39 +62,40 @@ public class CustomQuest extends BukkitRunnable implements Listener  {
                 if (shown != null) {
                     QuestBranch questBranch = shown.getBranchesManager().getPlayerBranch(acc);
 
-                    Field asyncRewardField = questBranch.getClass().getDeclaredField("asyncReward");
-                    asyncRewardField.setAccessible(true);
-                    List<PlayerAccount> asyncReward = (List<PlayerAccount>) asyncRewardField.get(questBranch);
+                    if (questBranch != null) {
+                        Field asyncRewardField = questBranch.getClass().getDeclaredField("asyncReward");
+                        asyncRewardField.setAccessible(true);
+                        List<PlayerAccount> asyncReward = (List<PlayerAccount>) asyncRewardField.get(questBranch);
 
-                    PlayerQuestDatas datas;
+                        PlayerQuestDatas datas;
 
-                    if (!acc.hasQuestDatas(shown) || (datas = acc.getQuestDatas(shown)).getBranch() != questBranch.getID()) {
-                        sendEmptyQuest();
-                    }
-                    else {
-                        LinkedHashMap<AbstractStage, QuestBranch> endStages = questBranch.getEndingStages();
-
-                        if (asyncReward.contains(acc))
+                        if (!acc.hasQuestDatas(shown) || (datas = acc.getQuestDatas(shown)).getBranch() != questBranch.getID()) {
                             sendEmptyQuest();
-                        else {
-                            com.ramonrpa.customversion.api.Quest quest = new com.ramonrpa.customversion.api.Quest(shown.getName(), UUID.randomUUID(), p);
-                            if (datas.isInEndingStages()) {
-                                int i = 0;
-                                for (AbstractStage stage : endStages.keySet()) {
-                                    boolean focused = datas.getStage() == i ? true : false;
-                                    Objective obj = new Objective(UUID.randomUUID(), stage.getDescriptionLine(acc, QuestBranch.Source.SCOREBOARD), focused);
-                                    quest.addObjective(obj);
-                                    i++;
+                        } else {
+                            LinkedHashMap<AbstractStage, QuestBranch> endStages = questBranch.getEndingStages();
+
+                            if (asyncReward.contains(acc))
+                                sendEmptyQuest();
+                            else {
+                                com.ramonrpa.customversion.api.Quest quest = new com.ramonrpa.customversion.api.Quest(shown.getName(), UUID.randomUUID(), p);
+                                if (datas.isInEndingStages()) {
+                                    int i = 0;
+                                    for (AbstractStage stage : endStages.keySet()) {
+                                        boolean focused = datas.getStage() == i ? true : false;
+                                        Objective obj = new Objective(UUID.randomUUID(), stage.getDescriptionLine(acc, QuestBranch.Source.SCOREBOARD), focused);
+                                        quest.addObjective(obj);
+                                        i++;
+                                    }
+                                } else {
+                                    LinkedList<AbstractStage> regularStages = questBranch.getRegularStages();
+                                    for (int i = datas.getStage(); i < regularStages.size(); i++) {
+                                        boolean focused = datas.getStage() == i ? true : false;
+                                        Objective obj = new Objective(UUID.randomUUID(), regularStages.get(i).getDescriptionLine(acc, QuestBranch.Source.SCOREBOARD), focused);
+                                        quest.addObjective(obj);
+                                    }
                                 }
-                            } else {
-                                LinkedList<AbstractStage> regularStages = questBranch.getRegularStages();
-                                for (int i = datas.getStage(); i < regularStages.size(); i++) {
-                                    boolean focused = datas.getStage() == i ? true : false;
-                                    Objective obj = new Objective(UUID.randomUUID(), regularStages.get(i).getDescriptionLine(acc, QuestBranch.Source.SCOREBOARD), focused);
-                                    quest.addObjective(obj);
-                                }
+                                quest.send();
                             }
-                            quest.send();
                         }
                     }
                 } else {
